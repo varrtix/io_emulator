@@ -36,7 +36,7 @@ class completion final : public basic_completion {
 public:
   using basic_completion::basic_completion;
 
-  static ptr make_shared(items_type &&items) noexcept;
+  static ptr make_unique(items_type &&items) noexcept;
 
   char *generator(const char *text, int state) noexcept override;
 };
@@ -64,7 +64,7 @@ inline char *completion::generator(const char *text, int state) noexcept {
 }
 
 inline completion::ptr
-completion::make_shared(completion::items_type &&items) noexcept {
+completion::make_unique(completion::items_type &&items) noexcept {
   return std::make_unique<completion>(std::move(items));
 }
 } // namespace termctl
