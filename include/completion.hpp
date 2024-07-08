@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstring>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -17,9 +18,9 @@ public:
   virtual ~basic_completion() = default;
 
   explicit basic_completion(const items_type &items);
-  explicit basic_completion(items_type &&items);
+  explicit basic_completion(items_type &&items) noexcept;
 
-  virtual char *generator(const char *text, int state) = 0;
+  virtual char *generator(const char *text, int state) noexcept = 0;
 
 protected:
   items_type items_;
@@ -28,33 +29,42 @@ protected:
 
 inline basic_completion::basic_completion(const items_type &items)
     : items_(items), iter_(items_.cend()) {}
-inline basic_completion::basic_completion(items_type &&items)
+inline basic_completion::basic_completion(items_type &&items) noexcept
     : items_(std::move(items)), iter_(items_.cend()) {}
 
 class completion : public basic_completion {
 public:
   using basic_completion::basic_completion;
 
-  char *generator(const char *text, int state) override;
+  static ptr make_shared(items_type &&items) noexcept;
+
+  char *generator(const char *text, int state) noexcept override;
 };
 
-inline char *completion::generator(const char *text, int state) {
-  if (state == 0)
-    iter_ = items_.cbegin();
+inline char *completion::generator(const char *text, int state) noexcept {
+  try {
+    if (state == 0)
+      iter_ = items_.cbegin();
 
-  const auto len = std::strlen(text);
-  if (len)
-    while (iter_ != items_.cend()) {
-      const auto &item = *iter_;
-      ++iter_;
-      if (item.compare(0, len, text) == 0)
-        return strdup(item.c_str());
-    }
+    const auto len = std::strlen(text);
+    if (len)
+      while (iter_ != items_.cend()) {
+        const auto &item = *iter_;
+        ++iter_;
+        if (item.compare(0, len, text) == 0)
+          return strdup(item.c_str());
+      }
+  } catch (const std::exception &e) {
+    std::cerr << "exception caught: " << e.what() << std::endl;
+  } catch (...) {
+    std::cerr << "unknown exception caught." << std::endl;
+  }
 
   return nullptr;
 }
 
-inline basic_completion::ptr make_shared(basic_completion::items_type &&items) {
+inline completion::ptr
+completion::make_shared(completion::items_type &&items) noexcept {
   return std::make_unique<completion>(std::move(items));
 }
 } // namespace termctl
