@@ -17,8 +17,10 @@ public:
   basic_completion &operator=(basic_completion &&) noexcept = default;
   virtual ~basic_completion() = default;
 
-  explicit basic_completion(const items_type &items);
-  explicit basic_completion(items_type &&items) noexcept;
+  explicit basic_completion(const items_type &items)
+      : items_(items), iter_(items_.cend()) {}
+  explicit basic_completion(items_type &&items) noexcept
+      : items_(std::move(items)), iter_(items_.cend()) {}
 
   virtual char *generator(const char *text, int state) noexcept = 0;
 
@@ -27,16 +29,13 @@ protected:
   items_type::const_iterator iter_;
 };
 
-inline basic_completion::basic_completion(const items_type &items)
-    : items_(items), iter_(items_.cend()) {}
-inline basic_completion::basic_completion(items_type &&items) noexcept
-    : items_(std::move(items)), iter_(items_.cend()) {}
-
 class completion final : public basic_completion {
 public:
   using basic_completion::basic_completion;
 
-  static ptr make_unique(items_type &&items) noexcept;
+  static inline ptr make_unique(items_type &&items) noexcept {
+    return std::make_unique<completion>(std::move(items));
+  }
 
   char *generator(const char *text, int state) noexcept override;
 };
@@ -61,10 +60,5 @@ inline char *completion::generator(const char *text, int state) noexcept {
   }
 
   return nullptr;
-}
-
-inline completion::ptr
-completion::make_unique(completion::items_type &&items) noexcept {
-  return std::make_unique<completion>(std::move(items));
 }
 } // namespace termctl
