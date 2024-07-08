@@ -47,13 +47,12 @@ class commands final {
 public:
   using map_type = std::unordered_map<std::string, basic_command::ptr>;
 
-  inline static commands &shared() {
-    static commands cmds_;
-    return cmds_;
-  }
-
+  commands() = default;
   commands(const commands &) = delete;
   commands &operator=(const commands &) = delete;
+  commands(commands &&) noexcept = default;
+  commands &operator=(commands &&) noexcept = default;
+  ~commands() = default;
 
   inline void register_command(basic_command::ptr &&cmd) {
     cmds_map_.emplace(cmd->get_name(), std::move(cmd));
@@ -68,9 +67,6 @@ public:
   }
 
 private:
-  commands() = default;
-  ~commands() = default;
-
   map_type cmds_map_;
 };
 } // namespace termctl
