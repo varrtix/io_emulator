@@ -32,7 +32,7 @@ inline basic_completion::basic_completion(const items_type &items)
 inline basic_completion::basic_completion(items_type &&items) noexcept
     : items_(std::move(items)), iter_(items_.cend()) {}
 
-class completion : public basic_completion {
+class completion final : public basic_completion {
 public:
   using basic_completion::basic_completion;
 
