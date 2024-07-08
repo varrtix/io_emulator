@@ -42,13 +42,6 @@ protected:
   execution exec_;
   completion::ptr param_completion_;
 };
-} // namespace termctl
-
-namespace termctl {
-inline basic_command::ptr make_exit_command() {
-  return std::make_unique<basic_command>("exit",
-                                         [](const auto &) { return true; });
-}
 
 class commands final {
 public:
@@ -80,5 +73,11 @@ private:
 
   map_type cmds_map_;
 };
+} // namespace termctl
 
+namespace termctl {
+inline basic_command::ptr make_exit_command() {
+  return std::make_unique<basic_command>("exit",
+                                         [](const auto &) { return true; });
+}
 } // namespace termctl
