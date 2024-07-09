@@ -2,6 +2,8 @@
 
 #include "terminal.hpp"
 
+#include "commands_impl.hpp"
+
 constexpr auto term_name = "iotest";
 
 int main(int argc, char const *argv[]) {
