@@ -64,18 +64,17 @@ public:
 
   inline virtual bool execute_command(const std::string &name,
                                       basic_command::exec_args &&args) const {
-    auto it = cmds_map_.find(name);
-    return it == cmds_map_.cend() ? false
-                                  : it->second->execute(std::move(args));
+    if (auto it = cmds_map_.find(name); it != cmds_map_.cend())
+      return it->second->execute(std::move(args));
+    return false;
   }
 
   inline basic_completion::generator_func
   find_param_generator(const std::string &name) const {
-    auto it = cmds_map_.find(name);
-    return it == cmds_map_.cend()
-               ? basic_completion::generator_func()
-               : std::bind(&basic_command::param_generator, it->second.get(),
-                           std::placeholders::_1, std::placeholders::_2);
+    if (auto it = cmds_map_.find(name); it != cmds_map_.cend())
+      return std::bind(&basic_command::param_generator, it->second.get(),
+                       std::placeholders::_1, std::placeholders::_2);
+    return {};
   }
 
 private:
