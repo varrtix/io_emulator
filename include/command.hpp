@@ -32,7 +32,7 @@ public:
     return has_param() ? param_completion_->generator(text, state) : nullptr;
   }
 
-  inline virtual bool execute(const exec_args &args) const {
+  inline virtual bool execute(exec_args &&args) const {
     return exec_ ? exec_(args) : false;
   }
 
@@ -62,12 +62,11 @@ public:
     cmds_map_.emplace(cmd->get_name(), std::move(cmd));
   }
 
-  inline virtual bool
-  execute_command(const std::string &name,
-                  const basic_command::exec_args args) const {
-    if (auto &&it = cmds_map_.find(name); it != cmds_map_.cend())
-      return it->second->execute(args);
-    return false;
+  inline virtual bool execute_command(const std::string &name,
+                                      basic_command::exec_args &&args) const {
+    auto it = cmds_map_.find(name);
+    return it == cmds_map_.cend() ? false
+                                  : it->second->execute(std::move(args));
   }
 
   inline basic_completion::generator_func
