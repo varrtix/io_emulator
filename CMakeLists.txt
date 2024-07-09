@@ -4,6 +4,7 @@ project(io_test LANGUAGES CXX)
 
 include(GNUInstallDirs)
 include(FetchContent)
+include(${CMAKE_SOURCE_DIR}/external/drv_emu/cmake/ctf.cmake)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -34,9 +35,11 @@ FetchContent_MakeAvailable(readline)
 file(GLOB SRC_FILES ${CMAKE_SOURCE_DIR}/src/*.cc)
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 
-target_include_directories(${PROJECT_NAME} PRIVATE 
+target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/external/include
   ${readline_SOURCE_DIR}
+  # ${ctf_path}/include
+  ${ctf_path}/include/xml
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE readline)
