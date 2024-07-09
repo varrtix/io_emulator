@@ -1,25 +1,22 @@
 #include <iostream>
 
-#include "command.hpp"
-#include "completion.hpp"
+#include "terminal.hpp"
 
 constexpr auto term_name = "iotest";
 
-inline void register_all_commands() {
-  auto cmds = std::vector<termctl::basic_command::ptr>{
-      termctl::make_exit_command(),
-  };
-  for (auto &cmd : cmds)
-    termctl::commands::shared().register_command(std::move(cmd));
-}
-
 int main(int argc, char const *argv[]) {
   try {
-    register_all_commands();
-    auto cmd_completion = termctl::completion::make_unique(
-        std::vector<std::string>{"help", "list", "exit"});
+    auto &term = termctl::terminal::shared();
+    auto cmds = std::vector<termctl::basic_command::ptr>();
+    auto &&get_param = std::vector<std::string>{
+        "CM1", "CM2", "PM.HHP", "TCP", "#12.331.1", "#11.33.1",
+    };
 
-    // termctl::commands::shared().register();
+    cmds.push_back(termctl::make_exit_command());
+    cmds.push_back(termctl::make_get_command(std::move(get_param)));
+    term.register_commands(std::move(cmds));
+
+    term.run(term_name);
 
     return EXIT_SUCCESS;
 
