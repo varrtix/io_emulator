@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <functional>
+#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -70,14 +71,12 @@ public:
   }
 
   inline basic_completion::generator_func
-  find_param_generator(const std::string &name) {
+  find_param_generator(const std::string &name) const {
     auto it = cmds_map_.find(name);
-    return std::bind(&basic_completion::generator, it->second.get(),
-                     std::placeholders::_1, std::placeholders::_2);
-    // return completion::generator_func(
-    // std::move(std::bind(&completion::generator, it->second.get(),
-    // std::placeholders::_1, std::placeholders::_2)));
-    // return termctl::basic_completion::generator_func(nullptr);
+    return it == cmds_map_.cend()
+               ? basic_completion::generator_func()
+               : std::bind(&basic_command::param_generator, it->second.get(),
+                           std::placeholders::_1, std::placeholders::_2);
   }
 
 private:
