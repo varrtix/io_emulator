@@ -12,7 +12,8 @@ inline basic_command::ptr make_exit_command() {
   });
 }
 
-inline basic_command::ptr make_get_command(completion::items_type &&items) {
+inline basic_command::ptr
+make_get_command(const completion::items_type &items) {
   return std::make_unique<basic_command>(
       "get",
       [](const auto &args) {
@@ -20,6 +21,6 @@ inline basic_command::ptr make_get_command(completion::items_type &&items) {
         std::cout << "get param: [" << arg << "]" << std::endl;
         return true;
       },
-      std::move(items));
+      items);
 }
 } // namespace termctl

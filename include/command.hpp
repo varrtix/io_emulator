@@ -21,6 +21,12 @@ public:
   virtual ~basic_command() = default;
 
   explicit basic_command(const std::string &name, execution &&exec,
+                         const completion::items_type &items)
+      : name_(name), exec_(std::move(exec)),
+        param_completion_(items.empty() ? nullptr
+                                        : completion::make_unique(items)) {}
+
+  explicit basic_command(const std::string &name, execution &&exec,
                          completion::items_type &&items = {})
       : name_(name), exec_(std::move(exec)),
         param_completion_(items.empty()
