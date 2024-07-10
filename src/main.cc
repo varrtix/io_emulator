@@ -15,7 +15,8 @@ int main(int argc, char const *argv[]) {
     auto get_param = xmlparser->item_keys();
 
     cmds.push_back(termctl::make_exit_command());
-    cmds.push_back(termctl::make_get_command(std::move(get_param)));
+    cmds.push_back(termctl::make_get_command(get_param));
+    cmds.push_back(termctl::make_set_command(get_param));
     term.register_commands(std::move(cmds));
 
     term.run(term_name);

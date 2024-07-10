@@ -23,4 +23,10 @@ make_get_command(const completion::items_type &items) {
       },
       items);
 }
+
+inline basic_command::ptr
+make_set_command(const completion::items_type &items) {
+  return std::make_unique<basic_command>(
+      "set", [](const auto &args) { return true; }, items);
+}
 } // namespace termctl

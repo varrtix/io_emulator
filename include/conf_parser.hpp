@@ -135,8 +135,14 @@ public:
 
   struct item {
     enum class category_type { memory, io } category;
+    enum class data_type {
+      unknown,
+      int_v,
+      double_v,
+      string_v,
+    } dt;
     std::int32_t driver_id;
-    std::string name, data_type, pr, pw;
+    std::string name, pr, pw;
 
     item() = delete;
     ~item() = default;
@@ -150,9 +156,18 @@ public:
             auto n = node_get_attr(node, "drv");
             return n.empty() ? -1 : std::stoi(n);
           }()),
-          name(node_get_attr(node, "name")),
-          data_type(node_get_attr(node, "dt")), pr(node_get_attr(node, "pr")),
-          pw(node_get_attr(node, "pw")) {}
+          name(node_get_attr(node, "name")), dt([&node]() {
+            auto n = node_get_attr(node, "dt");
+            if (n == "Integer")
+              return data_type::int_v;
+            else if (n == "Double")
+              return data_type::double_v;
+            else if (n == "String")
+              return data_type::string_v;
+            else
+              return data_type::unknown;
+          }()),
+          pr(node_get_attr(node, "pr")), pw(node_get_attr(node, "pw")) {}
   };
 
   explicit io_parser(const std::string &env_key)
