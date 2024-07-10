@@ -83,7 +83,7 @@ inline void
 terminal::register_commands(std::vector<basic_command::ptr> &&cmds) {
   auto names = completion::items_type();
   for (auto &cmd : cmds) {
-    names.push_back(cmd->get_name());
+    names.emplace(cmd->get_name());
     cmds_.register_command(std::move(cmd));
   }
 

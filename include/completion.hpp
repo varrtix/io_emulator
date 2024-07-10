@@ -4,13 +4,13 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <vector>
+#include <unordered_set>
 
 namespace termctl {
 class basic_completion {
 public:
   using ptr = std::unique_ptr<basic_completion>;
-  using items_type = std::vector<std::string>;
+  using items_type = std::unordered_set<std::string>;
   using generator_func = std::function<char *(const char *, int)>;
 
   basic_completion() = delete;

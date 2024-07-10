@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "conf_parser.hpp"
 #include "terminal.hpp"
 
 #include "commands_impl.hpp"
@@ -10,9 +11,8 @@ int main(int argc, char const *argv[]) {
   try {
     auto &term = termctl::terminal::shared();
     auto cmds = std::vector<termctl::basic_command::ptr>();
-    auto &&get_param = std::vector<std::string>{
-        "CM1", "CM2", "PM.HHP", "TCP", "#12.331.1", "#11.33.1",
-    };
+    auto xmlparser = conf::io_parser::make_unique("IOXML_CONF_PATH");
+    auto get_param = xmlparser->item_keys();
 
     cmds.push_back(termctl::make_exit_command());
     cmds.push_back(termctl::make_get_command(std::move(get_param)));

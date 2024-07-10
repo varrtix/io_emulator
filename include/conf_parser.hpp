@@ -5,11 +5,11 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include <rapidxml.hpp>
@@ -107,9 +107,11 @@ public:
   struct item;
 
   using basic_parser::basic_parser;
+  using ptr = std::unique_ptr<io_parser>;
   using node_type = rapidxml::xml_node<>;
   using drivers_type = std::unordered_map<std::uint32_t, driver>;
   using items_type = std::unordered_map<std::string, item>;
+  using item_keys_type = std::unordered_set<std::string>;
 
   struct driver {
     std::int32_t id, node;
@@ -164,15 +166,18 @@ public:
     reload();
   }
 
-  inline static basic_parser::ptr make_unique(const std::string &env_key) {
+  inline static io_parser::ptr make_unique(const std::string &env_key) {
     return std::make_unique<io_parser>(env_key);
   }
+
+  inline const item_keys_type &item_keys() const noexcept { return item_keys_; }
 
   void reload(const std::filesystem::path &filepath = {}) override;
 
 private:
   drivers_type drivers_;
   items_type items_;
+  item_keys_type item_keys_;
 
   inline static std::string node_get_attr(const node_type *node,
                                           const std::string &name) {
@@ -207,14 +212,17 @@ inline void io_parser::reload(const std::filesystem::path &filepath) {
     }
 
   auto items = items_type();
+  auto item_keys = item_keys_type();
   for (auto node = items_node->first_node(item_attr_k); node != nullptr;
        node = node->next_sibling())
     if (std::string_view(node->name()) == item_attr_k) {
       auto i = item(node);
+      item_keys.emplace(i.name);
       items.emplace(i.name, std::move(i));
     }
 
   drivers_ = std::move(drivers);
   items_ = std::move(items);
+  item_keys_ = std::move(item_keys);
 }
 } // namespace conf
