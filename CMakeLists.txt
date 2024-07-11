@@ -56,4 +56,5 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ${ctf_path}/include/xml
   ${DRV_DEPS_INCLUDE}
 )
-target_link_libraries(${PROJECT_NAME} PRIVATE readline)
+target_link_directories(${PROJECT_NAME} PRIVATE ${ctf_path}/bin/Debug)
+target_link_libraries(${PROJECT_NAME} PRIVATE readline iosvc)
