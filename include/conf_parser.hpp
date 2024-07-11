@@ -108,6 +108,7 @@ public:
 
   using basic_parser::basic_parser;
   using ptr = std::unique_ptr<io_parser>;
+  using shared_ptr = std::shared_ptr<io_parser>;
   using node_type = rapidxml::xml_node<>;
   using drivers_type = std::unordered_map<std::uint32_t, driver>;
   using items_type = std::unordered_map<std::string, item>;
@@ -200,6 +201,10 @@ public:
 
   inline static io_parser::ptr make_unique(const std::string &env_key) {
     return std::make_unique<io_parser>(env_key);
+  }
+
+  inline static io_parser::shared_ptr make_shared(const std::string &env_key) {
+    return std::make_shared<io_parser>(env_key);
   }
 
   inline const item_keys_type &item_keys() const noexcept { return item_keys_; }
