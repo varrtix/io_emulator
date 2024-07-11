@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -47,7 +48,7 @@ protected:
 
   static xmlbuffer make_buffer(const std::filesystem::path &filepath);
 
-  inline static xmldoc_ptr make_xmldoc(xmlbuffer &buffer) {
+  static xmldoc_ptr make_xmldoc(xmlbuffer &buffer) {
     auto xmldoc = std::make_unique<xmldoc_ptr::element_type>();
     xmldoc->parse<0>(buffer.data());
     return xmldoc;
@@ -123,6 +124,8 @@ public:
 
     driver() = delete;
     ~driver() = default;
+    driver(const driver &) = default;
+    driver &operator=(const driver &) = default;
     driver(driver &&) noexcept = default;
     driver &operator=(driver &&) noexcept = default;
 
@@ -132,7 +135,7 @@ public:
           enable(node_get_attr(node, "enable") == "True") {}
 
   private:
-    inline static std::int32_t parse_node_attr(const node_type *node) {
+    static std::int32_t parse_node_attr(const node_type *node) {
       const auto &n = node_get_attr(node, "node");
       return n.empty() ? -1 : std::stoi(n);
     }
@@ -156,6 +159,8 @@ public:
 
     item() = delete;
     ~item() = default;
+    item(const item &) = default;
+    item &operator=(const item &) = default;
     item(item &&) noexcept = default;
     item &operator=(item &&) noexcept = default;
 
@@ -165,12 +170,12 @@ public:
           pr(node_get_attr(node, "pr")), pw(node_get_attr(node, "pw")) {}
 
   private:
-    inline static category_type parse_category(const node_type *node) {
+    static category_type parse_category(const node_type *node) {
       return node_get_attr(node, "cat") == "IO" ? category_type::io
                                                 : category_type::memory;
     }
 
-    inline static data_type parse_data_type(const node_type *node) {
+    static data_type parse_data_type(const node_type *node) {
       const auto &n = node_get_attr(node, "dt");
       if (n == "Integer")
         return data_type::int_val;
@@ -182,7 +187,7 @@ public:
         return data_type::unknown;
     }
 
-    inline static std::int32_t parse_driver_id(const node_type *node) {
+    static std::int32_t parse_driver_id(const node_type *node) {
       const auto &n = node_get_attr(node, "drv");
       return n.empty() ? -1 : std::stoi(n);
     }
@@ -199,15 +204,27 @@ public:
     reload();
   }
 
-  inline static io_parser::ptr make_unique(const std::string &env_key) {
+  static io_parser::ptr make_unique(const std::string &env_key) {
     return std::make_unique<io_parser>(env_key);
   }
 
-  inline static io_parser::shared_ptr make_shared(const std::string &env_key) {
+  static io_parser::shared_ptr make_shared(const std::string &env_key) {
     return std::make_shared<io_parser>(env_key);
   }
 
-  inline const item_keys_type &item_keys() const noexcept { return item_keys_; }
+  const item_keys_type &item_keys() const noexcept { return item_keys_; }
+
+  std::optional<driver> find_driver(std::uint32_t id) const {
+    if (auto it = drivers_.find(id); it != drivers_.cend())
+      return it->second;
+    return std::nullopt;
+  }
+
+  std::optional<item> find_item(const std::string &name) const {
+    if (auto it = items_.find(name); it != items_.cend())
+      return it->second;
+    return std::nullopt;
+  }
 
   void reload(const std::filesystem::path &filepath = {}) override;
 
@@ -216,8 +233,8 @@ private:
   items_type items_;
   item_keys_type item_keys_;
 
-  inline static std::string node_get_attr(const node_type *node,
-                                          const std::string &name) {
+  static std::string node_get_attr(const node_type *node,
+                                   const std::string &name) {
     if (auto attr = node->first_attribute(name.c_str());
         attr != nullptr && attr->value()[0] != '\0')
       return attr->value();
