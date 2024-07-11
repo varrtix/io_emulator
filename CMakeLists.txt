@@ -5,6 +5,7 @@ project(io_test LANGUAGES CXX)
 include(GNUInstallDirs)
 include(FetchContent)
 include(${CMAKE_SOURCE_DIR}/external/drv_emu/cmake/ctf.cmake)
+include(${CMAKE_SOURCE_DIR}/external/drv_emu/cmake/emu.cmake)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -24,6 +25,18 @@ if(POLICY CMP0135)
     cmake_policy(SET CMP0135 NEW)
 endif()
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        add_compile_options(-Wall)
+        add_compile_definitions(__GNU_C__)
+    endif()
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(CMAKE_GENERATOR_PLATFORM x64)
+    add_compile_options(/W4)
+    add_compile_definitions(WIN32 CTF_DRIVER_EXPORTS)
+endif()
+
+
 # Fetch the GNU Readline library
 FetchContent_Declare(
     readline
@@ -39,7 +52,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/external/include
   ${readline_SOURCE_DIR}
-  # ${ctf_path}/include
+  ${ctf_path}/include
   ${ctf_path}/include/xml
+  ${DRV_DEPS_INCLUDE}
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE readline)
