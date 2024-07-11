@@ -36,11 +36,11 @@ class completion final : public basic_completion {
 public:
   using basic_completion::basic_completion;
 
-  inline static ptr make_unique(const items_type &items) {
+  static ptr make_unique(const items_type &items) {
     return std::make_unique<completion>(items);
   }
 
-  inline static ptr make_unique(items_type &&items) noexcept {
+  static ptr make_unique(items_type &&items) noexcept {
     return std::make_unique<completion>(std::move(items));
   }
 

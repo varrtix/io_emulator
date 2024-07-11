@@ -19,13 +19,13 @@ public:
   terminal(const terminal &) = delete;
   terminal &operator=(const terminal &) = delete;
 
-  inline static terminal &shared() {
+  static terminal &shared() {
     static terminal term_;
     return term_;
   }
 
-  inline void set_prompt(const std::string &name) { prompt_ = name + "> "; }
-  inline const std::string &prompt() const noexcept { return prompt_; }
+  void set_prompt(const std::string &name) { prompt_ = name + "> "; }
+  const std::string &prompt() const noexcept { return prompt_; }
 
   void register_commands(std::vector<basic_command::ptr> &&cmds);
 
@@ -36,20 +36,20 @@ private:
 
   static char **command_completion(const char *text, int start, int end);
 
-  inline static char *generic_generator(const char *text, int state) {
+  static char *generic_generator(const char *text, int state) {
     return shared().generator_ ? shared().generator_(text, state) : nullptr;
   }
 
-  inline void assign_cmd_generator() noexcept {
+  void assign_cmd_generator() noexcept {
     generator_ = std::bind(&basic_completion::generator, cmd_completion_.get(),
                            std::placeholders::_1, std::placeholders::_2);
   }
 
-  inline void assign_param_generator(const std::string &name) {
+  void assign_param_generator(const std::string &name) {
     generator_ = cmds_.find_param_generator(name);
   }
 
-  inline void reset_generator() { generator_ = nullptr; }
+  void reset_generator() { generator_ = nullptr; }
 
   std::string prompt_;
   commands cmds_;
