@@ -114,8 +114,10 @@ public:
   using item_keys_type = std::unordered_set<std::string>;
 
   struct driver {
-    std::int32_t id, node;
-    std::string name, file;
+    std::int32_t id;
+    std::int32_t node;
+    std::string name;
+    std::string file;
     bool enable;
 
     driver() = delete;
@@ -124,25 +126,32 @@ public:
     driver &operator=(driver &&) noexcept = default;
 
     explicit driver(const node_type *node)
-        : id(std::stoi(node_get_attr(node, "id"))), node([&node]() {
-            auto n = node_get_attr(node, "node");
-            return n.empty() ? -1 : std::stoi(n);
-          }()),
-          name(node_get_attr(node, "name")),
-          enable(node_get_attr(node, "enable") == "True"),
-          file(node_get_attr(node, "file")) {}
+        : id(std::stoi(node_get_attr(node, "id"))), node(parse_node_attr(node)),
+          name(node_get_attr(node, "name")), file(node_get_attr(node, "file")),
+          enable(node_get_attr(node, "enable") == "True") {}
+
+  private:
+    inline static std::int32_t parse_node_attr(const node_type *node) {
+      const auto &n = node_get_attr(node, "node");
+      return n.empty() ? -1 : std::stoi(n);
+    }
   };
 
   struct item {
-    enum class category_type { memory, io } category;
+    enum class category_type { memory, io };
     enum class data_type {
       unknown,
-      int_v,
-      double_v,
-      string_v,
-    } dt;
+      int_val,
+      double_val,
+      string_val,
+    };
+
+    category_type category;
+    data_type dt;
     std::int32_t driver_id;
-    std::string name, pr, pw;
+    std::string name;
+    std::string pr;
+    std::string pw;
 
     item() = delete;
     ~item() = default;
@@ -150,24 +159,32 @@ public:
     item &operator=(item &&) noexcept = default;
 
     explicit item(const node_type *node)
-        : category(node_get_attr(node, "cat") == "IO" ? category_type::io
-                                                      : category_type::memory),
-          driver_id([&node]() {
-            auto n = node_get_attr(node, "drv");
-            return n.empty() ? -1 : std::stoi(n);
-          }()),
-          name(node_get_attr(node, "name")), dt([&node]() {
-            auto n = node_get_attr(node, "dt");
-            if (n == "Integer")
-              return data_type::int_v;
-            else if (n == "Double")
-              return data_type::double_v;
-            else if (n == "String")
-              return data_type::string_v;
-            else
-              return data_type::unknown;
-          }()),
+        : category(parse_category(node)), dt(parse_data_type(node)),
+          driver_id(parse_driver_id(node)), name(node_get_attr(node, "name")),
           pr(node_get_attr(node, "pr")), pw(node_get_attr(node, "pw")) {}
+
+  private:
+    inline static category_type parse_category(const node_type *node) {
+      return node_get_attr(node, "cat") == "IO" ? category_type::io
+                                                : category_type::memory;
+    }
+
+    inline static data_type parse_data_type(const node_type *node) {
+      const auto &n = node_get_attr(node, "dt");
+      if (n == "Integer")
+        return data_type::int_val;
+      else if (n == "Double")
+        return data_type::double_val;
+      else if (n == "String")
+        return data_type::string_val;
+      else
+        return data_type::unknown;
+    }
+
+    inline static std::int32_t parse_driver_id(const node_type *node) {
+      const auto &n = node_get_attr(node, "drv");
+      return n.empty() ? -1 : std::stoi(n);
+    }
   };
 
   explicit io_parser(const std::string &env_key)
