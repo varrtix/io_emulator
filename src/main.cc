@@ -10,13 +10,11 @@ constexpr auto term_name = "iotest";
 int main(int argc, char const *argv[]) {
   try {
     auto &term = termctl::terminal::shared();
-    auto cmds = std::vector<termctl::basic_command::ptr>();
     auto xmlparser = conf::io_parser::make_shared("IOXML_CONF_PATH");
-    auto get_param = xmlparser->item_keys();
-
-    cmds.push_back(termctl::make_exit_command());
-    cmds.push_back(termctl::make_get_command(xmlparser));
-    cmds.push_back(termctl::make_set_command(get_param));
+    auto cmds = termctl::commands::make_vec(
+        termctl::make_help_command(), termctl::make_exit_command(),
+        termctl::make_get_command(xmlparser),
+        termctl::make_set_command(xmlparser));
     term.register_commands(std::move(cmds));
 
     term.run(term_name);
