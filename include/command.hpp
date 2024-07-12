@@ -83,8 +83,7 @@ public:
     return {};
   }
 
-  template <typename... Args>
-  static vec_type make_commands_vec(Args &&...args) {
+  template <typename... Args> static vec_type make_vec(Args &&...args) {
     vec_type vec;
     (vec.emplace_back(std::forward<Args>(args)), ...);
     return vec;
