@@ -5,7 +5,6 @@
 #include <sstream>
 #include <string>
 #include <string_view>
-#include <vector>
 
 #include <readline/history.h>
 #include <readline/readline.h>
@@ -27,7 +26,7 @@ public:
   void set_prompt(const std::string &name) { prompt_ = name + "> "; }
   const std::string &prompt() const noexcept { return prompt_; }
 
-  void register_commands(std::vector<basic_command::ptr> &&cmds);
+  void register_commands(commands::vec_type &&cmds);
 
   void run(const std::string &name);
 
@@ -79,8 +78,7 @@ inline char **terminal::command_completion(const char *text, int start,
   return matches;
 }
 
-inline void
-terminal::register_commands(std::vector<basic_command::ptr> &&cmds) {
+inline void terminal::register_commands(commands::vec_type &&cmds) {
   auto names = completion::items_type();
   for (auto &cmd : cmds) {
     names.emplace(cmd->get_name());

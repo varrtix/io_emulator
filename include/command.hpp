@@ -55,6 +55,7 @@ protected:
 class commands final {
 public:
   using map_type = std::unordered_map<std::string, basic_command::ptr>;
+  using vec_type = std::vector<basic_command::ptr>;
 
   commands() = default;
   commands(const commands &) = delete;
@@ -82,7 +83,15 @@ public:
     return {};
   }
 
+  template <typename... Args>
+  static vec_type make_commands_vec(Args &&...args) {
+    vec_type vec;
+    (vec.emplace_back(std::forward<Args>(args)), ...);
+    return vec;
+  }
+
 private:
   map_type cmds_map_;
 };
+
 } // namespace termctl
