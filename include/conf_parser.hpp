@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -169,6 +170,19 @@ public:
           driver_id(parse_driver_id(node)), name(node_get_attr(node, "name")),
           pr(node_get_attr(node, "pr")), pw(node_get_attr(node, "pw")) {}
 
+    void pretty_print() const noexcept {
+      std::stringstream ss;
+      ss << "[name: " << name << "]";
+      ss << "[dt: " << data_type_to_str(dt) << "]";
+      ss << "[cat: " << (category == category_type::io ? "IO" : "Memory")
+         << "]";
+      ss << "[drv: " << (driver_id >= 0 ? std::to_string(driver_id) : "Nil")
+         << "]";
+      ss << "[pr: " << (pr.empty() ? "Nil" : pr) << "]";
+      ss << "[pw: " << (pw.empty() ? "Nil" : pw) << "]";
+      std::cout << ss.str() << std::endl;
+    }
+
   private:
     static category_type parse_category(const node_type *node) {
       return node_get_attr(node, "cat") == "IO" ? category_type::io
@@ -185,6 +199,19 @@ public:
         return data_type::string_val;
       else
         return data_type::unknown;
+    }
+
+    static std::string data_type_to_str(const data_type type) noexcept {
+      switch (type) {
+      case data_type::int_val:
+        return "Integer";
+      case data_type::double_val:
+        return "Double";
+      case data_type::string_val:
+        return "String";
+      default:
+        return "Nil";
+      }
     }
 
     static std::int32_t parse_driver_id(const node_type *node) {
@@ -212,6 +239,7 @@ public:
     return std::make_shared<io_parser>(env_key);
   }
 
+  const items_type &items() const noexcept { return items_; }
   const item_keys_type &item_keys() const noexcept { return item_keys_; }
 
   std::optional<driver> find_driver(std::uint32_t id) const {

@@ -2,6 +2,8 @@
 
 #include <cstdlib>
 #include <functional>
+#include <iomanip>
+#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -72,6 +74,7 @@ public:
                                basic_command::exec_args &&args) const {
     if (auto it = cmds_map_.find(name); it != cmds_map_.cend())
       return it->second->execute(std::move(args));
+    std::cerr << "Error: invalid command " << std::quoted(name) << std::endl;
     return false;
   }
 

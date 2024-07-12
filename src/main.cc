@@ -13,6 +13,7 @@ int main(int argc, char const *argv[]) {
     auto xmlparser = conf::io_parser::make_shared("IOXML_CONF_PATH");
     auto cmds = termctl::commands::make_vec(
         termctl::make_help_command(), termctl::make_exit_command(),
+        termctl::make_info_command(xmlparser),
         termctl::make_get_command(xmlparser),
         termctl::make_set_command(xmlparser));
     term.register_commands(std::move(cmds));
