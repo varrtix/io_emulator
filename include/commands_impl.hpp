@@ -59,12 +59,15 @@ inline void variant::reset(item::data_type type, const std::string &param) {
   switch (type) {
   case item::data_type::int_val:
     var_ = 0;
+    break;
   case item::data_type::double_val:
     var_ = 0.0;
+    break;
   case item::data_type::string_val:
     var_ = std::string{};
+    break;
   default:
-    throw std::invalid_argument("unsupported type for constructor");
+    throw std::invalid_argument("unsupported type for reset variant");
   }
 
   if (!param.empty())
@@ -101,8 +104,7 @@ inline bool variant::write(const std::string &val) noexcept {
 inline bool perform_command_get(const termctl::basic_command::exec_args &args,
                                 const conf::io_parser::shared_ptr &parser) {
   if (args.empty()) {
-    std::cerr << "Error: requires exactly one argument on command 'get'"
-              << std::endl;
+    std::cerr << "Error: requires exactly one argument on command" << std::endl;
   } else {
     auto item = parser->find_item(args[0]);
     if (!item) {
@@ -119,11 +121,9 @@ inline bool perform_command_get(const termctl::basic_command::exec_args &args,
         return true;
       }
 
-      std::cerr
-          << "[FAIL][" << item->name << "][" << item->pr
-          << "] could not be read, please might need to set a value first "
-             "before using command 'get'"
-          << std::endl;
+      std::cerr << "[FAIL][" << item->name << "][" << item->pr
+                << "] could not be read, please might need to set a value first"
+                << std::endl;
     }
   }
 
@@ -133,14 +133,14 @@ inline bool perform_command_get(const termctl::basic_command::exec_args &args,
 inline bool perform_command_set(const termctl::basic_command::exec_args &args,
                                 const conf::io_parser::shared_ptr &parser) {
   if (args.size() != 2) {
-    std::cerr << "Error: requires exactly two arguments on command 'set'"
+    std::cerr << "Error: requires exactly two arguments on command"
               << std::endl;
   } else {
     if (auto item = parser->find_item(args[0]); item) {
       auto prw = item->pw;
       if (prw.empty()) {
         std::cerr << "Warning: the value 'pw' is empty, attempting to use 'pr' "
-                     "value for command 'set' ..."
+                     "value ..."
                   << std::endl;
 
         prw = item->pr;
@@ -173,8 +173,7 @@ inline bool perform_command_set(const termctl::basic_command::exec_args &args,
 inline bool perform_command_info(const termctl::basic_command::exec_args &args,
                                  const conf::io_parser::shared_ptr &parser) {
   if (args.empty()) {
-    std::cerr << "Error: requires exactly one argument on command 'info'"
-              << std::endl;
+    std::cerr << "Error: requires exactly one argument on command" << std::endl;
   } else {
     if (args[0] == "all") {
       for (const auto &item : parser->items())
