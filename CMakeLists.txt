@@ -57,4 +57,4 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ${DRV_DEPS_INCLUDE}
 )
 target_link_directories(${PROJECT_NAME} PRIVATE ${ctf_path}/bin/Debug)
-target_link_libraries(${PROJECT_NAME} PRIVATE readline iosvc)
+target_link_libraries(${PROJECT_NAME} PRIVATE readline iosvc ctf_util ctf_log)
