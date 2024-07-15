@@ -4,13 +4,12 @@ project(io_test LANGUAGES CXX)
 
 include(GNUInstallDirs)
 include(FetchContent)
-include(${CMAKE_SOURCE_DIR}/external/drv_emu/cmake/ctf.cmake)
 include(${CMAKE_SOURCE_DIR}/external/drv_emu/cmake/emu.cmake)
+include(${DRV_EMU_DIR}/cmake/ctf.cmake)
+
+set_stdcxx()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Enable AddressSanitizer for Debug builds
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
