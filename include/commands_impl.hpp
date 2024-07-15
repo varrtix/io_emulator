@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <variant>
 
 #include <lb/drv_emu.hpp>
@@ -32,6 +33,13 @@ public:
   variant &operator=(variant &&) noexcept = default;
   ~variant() = default;
 
+  template <typename T,
+            typename = std::enable_if_t<is_member_v<std::decay_t<T>>>>
+  variant &operator=(T &&val) {
+    set(std::forward<T>(val));
+    return *this;
+  }
+
   friend std::ostream &operator<<(std::ostream &, const variant &);
 
   explicit variant(item::data_type type, const std::string &param) {
@@ -42,29 +50,30 @@ public:
   auto &get() noexcept { return var_; }
   const auto &get() const noexcept { return var_; }
 
+  template <typename T,
+            typename = std::enable_if_t<is_member_v<std::decay_t<T>>>>
+  void set(T &&val) {
+    var_ = std::forward<T>(val);
+  }
+
   bool read();
   bool write(const std::string &val) noexcept;
 
 private:
   raw_type var_;
   std::string param_;
-
-  template <typename T> static constexpr bool is_supported_type() {
-    return std::is_same_v<T, int> || std::is_same_v<T, float> ||
-           std::is_same_v<T, double> || std::is_same_v<T, std::string>;
-  }
 };
 
 inline void variant::reset(item::data_type type, const std::string &param) {
   switch (type) {
   case item::data_type::int_val:
-    var_ = 0;
+    set(0);
     break;
   case item::data_type::double_val:
-    var_ = 0.0;
+    set(0.0);
     break;
   case item::data_type::string_val:
-    var_ = std::string{};
+    set(std::string{});
     break;
   default:
     throw std::invalid_argument("unsupported type for reset variant");
