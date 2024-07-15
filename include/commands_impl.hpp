@@ -35,7 +35,7 @@ public:
 
   template <typename T,
             typename = std::enable_if_t<is_member_v<std::decay_t<T>>>>
-  variant &operator=(T &&val) noexcept(noexcept(set(std::forward<T>(val)))) {
+  variant &operator=(T &&val) {
     set(std::forward<T>(val));
     return *this;
   }
@@ -54,7 +54,7 @@ public:
 
   template <typename T,
             typename = std::enable_if_t<is_member_v<std::decay_t<T>>>>
-  void set(T &&val) noexcept(noexcept(var_ = std::forward<T>(val))) {
+  void set(T &&val) {
     var_ = std::forward<T>(val);
   }
 
