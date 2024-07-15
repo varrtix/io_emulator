@@ -200,7 +200,15 @@ inline bool perform_command_info(const termctl::basic_command::exec_args &args,
 }
 
 inline std::ostream &operator<<(std::ostream &os, const variant &v) {
-  std::visit([&os](const auto &val) { os << val; }, v.get());
+  std::visit(
+      [&os](auto &&val) {
+        using Tv = std::decay_t<decltype(val)>;
+        if constexpr (std::is_same_v<Tv, std::string>)
+          os << val;
+        else
+          os << std::to_string(val);
+      },
+      v.get());
   return os;
 }
 } // namespace ctf_io
