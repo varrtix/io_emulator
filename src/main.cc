@@ -1,14 +1,15 @@
 #include <iostream>
-
-#include <map>
 #include <string>
+
+#ifdef CTF_CLI
+#include <map>
 
 #include <ctf_io.h>
 #include <ctf_log.h>
 #include <ctf_util.h>
+#endif
 
 #include "conf_parser.hpp"
-#include "ctf_io.h"
 #include "terminal.hpp"
 
 #include "commands_impl.hpp"
@@ -16,8 +17,10 @@
 constexpr auto term_name = "iotest";
 
 int main(int argc, char *argv[]) {
-
   try {
+    auto term_prompt = std::string(term_name);
+
+#ifdef CTF_CLI
     auto args = std::map<std::string, std::string>();
     if (!ctf::CTFConsole::process_command_line(argc, argv, args)) {
       CTF_LOG(ctf::CL_ERROR, "failed to process command line: %s", argv[0]);
@@ -30,6 +33,7 @@ int main(int argc, char *argv[]) {
       return EXIT_FAILURE;
     }
 
+    term_prompt = module_name;
     set_log_module_name(module_name);
     if (ctf::CTFTask::check_running_flag(module_name)) {
       CTF_LOG(ctf::CL_ERROR, "[%s] is already running ...", module_name);
@@ -51,6 +55,7 @@ int main(int argc, char *argv[]) {
       ctf::CTFTask::exit_task_exp(module_name);
       return EXIT_FAILURE;
     }
+#endif
 
     auto &term = termctl::terminal::shared();
     auto xmlparser = conf::io_parser::make_shared("IOXML_CONF_PATH");
@@ -62,11 +67,13 @@ int main(int argc, char *argv[]) {
 
     term.register_commands(std::move(cmds));
 
-    term.run(term_name);
+    term.run(term_prompt);
 
+#ifdef CTF_CLI
     ctf::CTFTask::set_running_flag(module_name);
     ctf::CTFTask::wait_exit_signal(module_name);
     ctf::CTFTask::exit_task_exp(module_name);
+#endif
 
     return EXIT_SUCCESS;
 

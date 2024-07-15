@@ -11,6 +11,14 @@ set_stdcxx()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Define the macro for enabling or disabling CTFConsole
+option(ENABLE_CTF_CLI "Disable CTFConsole mode" ON)
+# Add a definition based on the option
+if(ENABLE_CTF_CLI)
+    add_definitions(-DCTF_CLI)
+    message(STATUS "Enabling definition flag: CTF_CLI")
+endif()
+
 # Enable AddressSanitizer for Debug builds
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Enabling AddressSanitizer for Debug build")
