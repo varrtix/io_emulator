@@ -35,50 +35,42 @@ public:
 
   template <typename T,
             typename = std::enable_if_t<is_member_v<std::decay_t<T>>>>
-  variant &operator=(T &&val) {
+  variant &operator=(T &&val) noexcept(noexcept(set(std::forward<T>(val)))) {
     set(std::forward<T>(val));
     return *this;
   }
 
   friend std::ostream &operator<<(std::ostream &, const variant &);
 
-  explicit variant(item::data_type type, const std::string &param) {
-    reset(type, param);
+  explicit variant(item::data_type type, const std::string &param,
+                   const std::string &val = {}) {
+    reset(type, param, val);
   }
 
-  void reset(item::data_type type, const std::string &param = {});
+  void reset(item::data_type type, const std::string &param = {},
+             const std::string &val = {});
   auto &get() noexcept { return var_; }
   const auto &get() const noexcept { return var_; }
 
   template <typename T,
             typename = std::enable_if_t<is_member_v<std::decay_t<T>>>>
-  void set(T &&val) {
+  void set(T &&val) noexcept(noexcept(var_ = std::forward<T>(val))) {
     var_ = std::forward<T>(val);
   }
 
-  bool read();
-  bool write(const std::string &val) noexcept;
+  void set_value_from_str(item::data_type type, const std::string &val);
+
+  bool read() noexcept;
+  bool write() noexcept;
 
 private:
   raw_type var_;
   std::string param_;
 };
 
-inline void variant::reset(item::data_type type, const std::string &param) {
-  switch (type) {
-  case item::data_type::int_val:
-    set(0);
-    break;
-  case item::data_type::double_val:
-    set(0.0);
-    break;
-  case item::data_type::string_val:
-    set(std::string{});
-    break;
-  default:
-    throw std::invalid_argument("unsupported type for reset variant");
-  }
-
+inline void variant::reset(item::data_type type, const std::string &param,
+                           const std::string &val) {
+  set_value_from_str(type, val);
   if (!param.empty())
     std::visit(
         [&param, this](auto &&v) {
@@ -91,26 +83,48 @@ inline void variant::reset(item::data_type type, const std::string &param) {
         var_);
 }
 
-inline bool variant::read() {
-  auto ret = IO_UNKNOWN_TYPE;
-  if (auto ptr = std::get_if<int>(&var_))
-    ret = io_read_int(param_.c_str(), ptr);
-  else if (auto ptr = std::get_if<double>(&var_))
-    ret = io_read_double(param_.c_str(), ptr);
-  else if (auto ptr = std::get_if<std::string>(&var_))
-    ret = io_read_string(param_, *ptr);
-  return ret == IO_SUCCESS;
+inline void variant::set_value_from_str(item::data_type type,
+                                        const std::string &val) {
+  switch (type) {
+  case item::data_type::int_val:
+    set(val.empty() ? 0 : std::stoi(val));
+    break;
+  case item::data_type::double_val:
+    set(val.empty() ? 0.0 : std::stod(val));
+    break;
+  case item::data_type::string_val:
+    set(val);
+    break;
+  default:
+    throw std::invalid_argument("unsupported type for variant");
+  }
 }
 
-inline bool variant::write(const std::string &val) noexcept {
+inline bool variant::read() noexcept {
   try {
     auto ret = IO_UNKNOWN_TYPE;
-    if (std::holds_alternative<int>(var_))
-      ret = io_write_int(param_.c_str(), std::stoi(val));
-    else if (std::holds_alternative<double>(var_))
-      ret = io_write_double(param_.c_str(), std::stod(val));
-    else if (std::holds_alternative<std::string>(var_))
-      ret = io_write_string(param_.c_str(), val.c_str());
+    if (auto ptr = std::get_if<int>(&var_))
+      ret = io_read_int(param_.c_str(), ptr);
+    else if (auto ptr = std::get_if<double>(&var_))
+      ret = io_read_double(param_.c_str(), ptr);
+    else if (auto ptr = std::get_if<std::string>(&var_))
+      ret = io_read_string(param_, *ptr);
+    return ret == IO_SUCCESS;
+  } catch (const std::exception &e) {
+    std::cerr << "Error: " << e.what() << std::endl;
+  }
+  return false;
+}
+
+inline bool variant::write() noexcept {
+  try {
+    auto ret = IO_UNKNOWN_TYPE;
+    if (auto ptr = std::get_if<int>(&var_))
+      ret = io_write_int(param_.c_str(), *ptr);
+    else if (auto ptr = std::get_if<double>(&var_))
+      ret = io_write_double(param_.c_str(), *ptr);
+    else if (auto ptr = std::get_if<std::string>(&var_))
+      ret = io_write_string(param_.c_str(), ptr->c_str());
     return ret == IO_SUCCESS;
   } catch (const std::exception &e) {
     std::cerr << "Error: " << e.what() << std::endl;
@@ -169,8 +183,8 @@ inline bool perform_command_set(const termctl::basic_command::exec_args &args,
         }
       }
 
-      auto val = variant(item->dt, prw);
-      if (val.write(args[1])) {
+      auto val = variant(item->dt, prw, args[1]);
+      if (val.write()) {
         std::cout << "[OK][" << item->name << "][" << prw << "] write: " << val
                   << std::endl;
         return true;
