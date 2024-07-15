@@ -71,7 +71,15 @@ inline void variant::reset(item::data_type type, const std::string &param) {
   }
 
   if (!param.empty())
-    param_ = param;
+    std::visit(
+        [&param, this](auto &&v) {
+          using Tv = std::decay_t<decltype(v)>;
+          if constexpr (std::is_same_v<Tv, std::string>)
+            param_ = lb::drv_emulator<char>{}.to_io_name(param.c_str());
+          else
+            param_ = lb::drv_emulator<Tv>{}.to_io_name(param.c_str());
+        },
+        var_);
 }
 
 inline bool variant::read() {
