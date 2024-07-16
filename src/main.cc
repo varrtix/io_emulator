@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 #endif
 
     auto &term = termctl::terminal::shared();
-    auto xmlparser = conf::io_parser::make_shared("IOXML_CONF_PATH");
+    auto xmlparser = conf::io_parser::make_shared();
     auto cmds = termctl::commands::make_vec(
         termctl::make_help_command(), termctl::make_exit_command(),
         termctl::make_info_command(xmlparser),

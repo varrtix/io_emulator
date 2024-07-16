@@ -16,21 +16,21 @@
 
 #include <rapidxml.hpp>
 
+#include <ctf_util.h>
+
 namespace conf {
 class basic_parser {
 public:
   using ptr = std::unique_ptr<basic_parser>;
 
-  basic_parser() = delete;
   basic_parser(const basic_parser &) = delete;
   basic_parser &operator=(const basic_parser &) = delete;
   basic_parser(basic_parser &&) noexcept = default;
   basic_parser &operator=(basic_parser &&) noexcept = default;
   virtual ~basic_parser() = default;
 
-  explicit basic_parser(const std::filesystem::path &filepath)
-      : filepath_(filepath) {
-    reload();
+  explicit basic_parser(const std::filesystem::path &filepath) {
+    reload(filepath);
   }
   explicit basic_parser(std::filesystem::path &&filepath)
       : filepath_(std::move(filepath)) {
@@ -39,9 +39,13 @@ public:
 
   virtual void reload(const std::filesystem::path &filepath = {});
 
+  bool good() const { return valid_filepath(filepath_); }
+
 protected:
   using xmldoc_ptr = std::unique_ptr<rapidxml::xml_document<>>;
   using xmlbuffer = std::vector<char>;
+
+  basic_parser() = default;
 
   std::filesystem::path filepath_;
   xmlbuffer buffer_;
@@ -53,6 +57,10 @@ protected:
     auto xmldoc = std::make_unique<xmldoc_ptr::element_type>();
     xmldoc->parse<0>(buffer.data());
     return xmldoc;
+  }
+
+  static bool valid_filepath(const std::filesystem::path &filepath) {
+    return std::filesystem::is_regular_file(filepath);
   }
 };
 
@@ -82,10 +90,13 @@ basic_parser::make_buffer(const std::filesystem::path &filepath) {
 inline void basic_parser::reload(const std::filesystem::path &filepath) {
   auto path = filepath;
   if (path.empty()) {
-    if (filepath_.empty())
-      throw std::runtime_error("invalid filepath: " + filepath.string());
-    else
+    if (valid_filepath(filepath_))
       path = filepath_;
+    else
+      throw std::runtime_error("bad filepath");
+
+  } else if (!valid_filepath(path)) {
+    throw std::runtime_error("invalid filepath: " + path.string());
   }
 
   buffer_ = make_buffer(path);
@@ -103,6 +114,9 @@ class io_parser final : public basic_parser {
 
   static constexpr auto drv_attr_k = "DRV";
   static constexpr auto item_attr_k = "ITEM";
+
+  static constexpr auto ioconf_path_k = "IOXML_CONF_PATH";
+  static constexpr auto ioconf_path_suffix = "workspace/conf/conf-io.xml";
 
 public:
   struct driver;
@@ -220,23 +234,29 @@ public:
     }
   };
 
-  explicit io_parser(const std::string &env_key)
-      : basic_parser([&env_key]() {
-          const auto value = std::getenv(env_key.c_str());
-          if (value == nullptr)
-            throw std::runtime_error("env variable '" + env_key +
-                                     "' is not set");
-          return value;
-        }()) {
+  explicit io_parser(const std::string env_key = ioconf_path_k)
+      : basic_parser() {
+    const auto value = std::getenv(env_key.c_str());
+    auto filepath = std::filesystem::path();
+    if (value != nullptr) {
+      filepath = value;
+    } else if (auto root = ctf::get_current_eq_proj(); !root.empty()) {
+      filepath = std::move(root);
+      filepath /= ioconf_path_suffix;
+    } else {
+      std::cerr << "Warning: no config file could be load, please use "
+                   "command 'load' to read first"
+                << std::endl;
+      return;
+    }
+
     reload();
   }
 
-  static io_parser::ptr make_unique(const std::string &env_key) {
-    return std::make_unique<io_parser>(env_key);
-  }
+  static io_parser::ptr make_unique() { return std::make_unique<io_parser>(); }
 
-  static io_parser::shared_ptr make_shared(const std::string &env_key) {
-    return std::make_shared<io_parser>(env_key);
+  static io_parser::shared_ptr make_shared() {
+    return std::make_shared<io_parser>();
   }
 
   const items_type &items() const noexcept { return items_; }

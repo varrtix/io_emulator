@@ -9,11 +9,11 @@
 #include <utility>
 #include <variant>
 
+#include <ctf_io.h>
 #include <lb/drv_emu.hpp>
 
 #include "command.hpp"
 #include "conf_parser.hpp"
-#include "ctf_io.h"
 
 namespace ctf_io {
 class variant final {
