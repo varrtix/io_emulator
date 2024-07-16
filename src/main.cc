@@ -70,6 +70,7 @@ int main(int argc, char *argv[]) {
     term.run(term_prompt);
 
 #ifdef CTF_CLI
+    io_uninit_client();
     ctf::CTFTask::set_running_flag(module_name);
     ctf::CTFTask::wait_exit_signal(module_name);
     ctf::CTFTask::exit_task_exp(module_name);
