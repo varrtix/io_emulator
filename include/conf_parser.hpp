@@ -250,7 +250,7 @@ public:
       return;
     }
 
-    reload();
+    reload(filepath);
   }
 
   static io_parser::ptr make_unique() { return std::make_unique<io_parser>(); }
