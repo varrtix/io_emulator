@@ -153,6 +153,7 @@ inline void perform_command_get(const termctl::basic_command::exec_args &args,
       std::cerr << "[FAIL][" << item->name << "][" << item->pr
                 << "] could not be read, please might need to set a value first"
                 << std::endl;
+      return;
     }
   }
 
