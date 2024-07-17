@@ -58,12 +58,12 @@ int main(int argc, char *argv[]) {
 #endif
 
     auto &term = termctl::terminal::shared();
-    auto xmlparser = conf::io_parser::make_shared();
+    auto ioparser = conf::io_parser::make_shared();
     auto cmds = termctl::commands::make_vec(
         termctl::make_help_command(), termctl::make_exit_command(),
-        termctl::make_info_command(xmlparser),
-        termctl::make_get_command(xmlparser),
-        termctl::make_set_command(xmlparser));
+        termctl::make_info_command(ioparser),
+        termctl::make_get_command(ioparser),
+        termctl::make_set_command(ioparser));
 
     term.register_commands(std::move(cmds));
 

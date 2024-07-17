@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -132,24 +131,21 @@ inline bool variant::write() noexcept {
   return false;
 }
 
-inline bool perform_command_get(const termctl::basic_command::exec_args &args,
+inline void perform_command_get(const termctl::basic_command::exec_args &args,
                                 const conf::io_parser::shared_ptr &parser) {
-  if (args.empty()) {
-    std::cerr << "Error: requires exactly one argument on command" << std::endl;
-  } else {
+  if (!args.empty()) {
     auto item = parser->find_item(args[0]);
     if (!item) {
-      std::cerr << "Error: invalid item of module " << std::quoted(args[0])
-                << std::endl;
+      throw std::invalid_argument("invalid item of module \"" + args[0] + "\"");
     } else if (item->pr.empty()) {
-      std::cerr << "Error: the 'pr' value for module " << std::quoted(args[0])
-                << " could not be empty" << std::endl;
+      throw std::invalid_argument("the 'pr' value for module \"" + args[0] +
+                                  "\" could not be empty");
     } else {
       auto val = variant(item->dt, item->pr);
       if (val.read()) {
         std::cout << "[OK][" << item->name << "][" << item->pr
                   << "] read: " << val << std::endl;
-        return true;
+        return;
       }
 
       std::cerr << "[FAIL][" << item->name << "][" << item->pr
@@ -158,15 +154,12 @@ inline bool perform_command_get(const termctl::basic_command::exec_args &args,
     }
   }
 
-  return false;
+  throw std::invalid_argument("requires exactly one argument on command");
 }
 
-inline bool perform_command_set(const termctl::basic_command::exec_args &args,
+inline void perform_command_set(const termctl::basic_command::exec_args &args,
                                 const conf::io_parser::shared_ptr &parser) {
-  if (args.size() != 2) {
-    std::cerr << "Error: requires exactly two arguments on command"
-              << std::endl;
-  } else {
+  if (args.size() == 2) {
     if (auto item = parser->find_item(args[0]); item) {
       auto prw = item->pw;
       if (prw.empty()) {
@@ -175,51 +168,45 @@ inline bool perform_command_set(const termctl::basic_command::exec_args &args,
                   << std::endl;
 
         prw = item->pr;
-        if (prw.empty()) {
-          std::cerr << "Error: the value 'pr' is empty, attempt to use 'pr' "
-                       "value failed"
-                    << std::endl;
-          return false;
-        }
+        if (prw.empty())
+          throw std::runtime_error(
+              "the value 'pr' is empty, attempt to use 'pr' "
+              "value failed");
       }
 
       auto val = variant(item->dt, prw, args[1]);
       if (val.write()) {
         std::cout << "[OK][" << item->name << "][" << prw << "] write: " << val
                   << std::endl;
-        return true;
+        return;
       }
 
       std::cerr << "[FAIL][" << item->name << "][" << prw
                 << "] failed to write: " << args[1] << std::endl;
     } else {
-      std::cerr << "Error: invalid item of module " << std::quoted(args[0])
-                << std::endl;
+      throw std::invalid_argument("invalid item of module \"" + args[0] + "\"");
     }
   }
 
-  return false;
+  throw std::invalid_argument("requires exactly two arguments on command");
 }
 
-inline bool perform_command_info(const termctl::basic_command::exec_args &args,
+inline void perform_command_info(const termctl::basic_command::exec_args &args,
                                  const conf::io_parser::shared_ptr &parser) {
-  if (args.empty()) {
-    std::cerr << "Error: requires exactly one argument on command" << std::endl;
-  } else {
+  if (!args.empty()) {
     if (args[0] == "all") {
       for (const auto &item : parser->items())
         item.second.pretty_print();
-      return true;
+      return;
     } else if (auto item = parser->find_item(args[0]); item) {
       item->pretty_print();
-      return true;
+      return;
     }
 
-    std::cerr << "Error: invalid item of module " << std::quoted(args[0])
-              << std::endl;
+    throw std::invalid_argument("invalid item of module \"" + args[0] + "\"");
   }
 
-  return false;
+  throw std::invalid_argument("requires exactly one argument on command");
 }
 
 inline std::ostream &operator<<(std::ostream &os, const variant &v) {

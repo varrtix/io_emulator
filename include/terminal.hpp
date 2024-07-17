@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -93,26 +94,28 @@ inline void terminal::run(const std::string &name) {
   std::unique_ptr<char, decltype(&std::free)> input(nullptr, std::free);
   set_prompt(name);
   while (true) {
-    input.reset(readline(prompt().c_str()));
-    if (input == nullptr || std::strlen(input.get()) == 0) {
-      std::cerr << "Error: input is empty" << std::endl;
-      continue;
+    try {
+      input.reset(readline(prompt().c_str()));
+      if (input == nullptr || std::strlen(input.get()) == 0)
+        throw std::invalid_argument("input is empty");
+
+      std::istringstream iss(input.get());
+      std::string cmd, arg;
+      basic_command::exec_args args;
+      if (!iss.good())
+        throw std::invalid_argument("bad input");
+
+      iss >> cmd;
+      while (iss >> arg)
+        args.push_back(std::move(arg));
+
+      add_history(input.get());
+      cmds_.execute_command(cmd, std::move(args));
+    } catch (const std::exception &e) {
+      std::cerr << "Error: " << e.what() << std::endl;
+    } catch (...) {
+      std::cerr << "Error: unexpected error" << std::endl;
     }
-
-    std::istringstream iss(input.get());
-    std::string cmd, arg;
-    basic_command::exec_args args;
-    if (!iss.good()) {
-      std::cerr << "Error: bad input" << std::endl;
-      continue;
-    }
-
-    iss >> cmd;
-    while (iss >> arg)
-      args.push_back(std::move(arg));
-
-    add_history(input.get());
-    cmds_.execute_command(cmd, std::move(args));
   }
 }
 } // namespace termctl

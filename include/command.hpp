@@ -2,8 +2,7 @@
 
 #include <cstdlib>
 #include <functional>
-#include <iomanip>
-#include <iostream>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -15,7 +14,7 @@ class basic_command {
 public:
   using ptr = std::unique_ptr<basic_command>;
   using exec_args = std::vector<std::string>;
-  using execution = std::function<bool(const exec_args &)>;
+  using execution = std::function<void(const exec_args &)>;
 
   basic_command() = delete;
   basic_command(basic_command &&) noexcept = default;
@@ -39,8 +38,10 @@ public:
     return has_param() ? param_completion_->generator(text, state) : nullptr;
   }
 
-  virtual bool execute(exec_args &&args) const {
-    return exec_ ? exec_(args) : false;
+  virtual void execute(exec_args &&args) const {
+    if (!exec_)
+      throw std::runtime_error("execution does not exist");
+    exec_(args);
   }
 
   const std::string &get_name() const noexcept { return name_; }
@@ -70,12 +71,12 @@ public:
     cmds_map_.emplace(cmd->get_name(), std::move(cmd));
   }
 
-  virtual bool execute_command(const std::string &name,
+  virtual void execute_command(const std::string &name,
                                basic_command::exec_args &&args) const {
-    if (auto it = cmds_map_.find(name); it != cmds_map_.cend())
-      return it->second->execute(std::move(args));
-    std::cerr << "Error: invalid command " << std::quoted(name) << std::endl;
-    return false;
+    auto it = cmds_map_.find(name);
+    if (it == cmds_map_.cend())
+      throw std::invalid_argument("invalid command \"" + name + "\"");
+    it->second->execute(std::move(args));
   }
 
   basic_completion::generator_func
