@@ -137,9 +137,11 @@ inline void perform_command_get(const termctl::basic_command::exec_args &args,
     auto item = parser->find_item(args[0]);
     if (!item) {
       throw std::invalid_argument("invalid item of module \"" + args[0] + "\"");
+      return;
     } else if (item->pr.empty()) {
       throw std::invalid_argument("the 'pr' value for module \"" + args[0] +
                                   "\" could not be empty");
+      return;
     } else {
       auto val = variant(item->dt, item->pr);
       if (val.read()) {
@@ -183,6 +185,7 @@ inline void perform_command_set(const termctl::basic_command::exec_args &args,
 
       std::cerr << "[FAIL][" << item->name << "][" << prw
                 << "] failed to write: " << args[1] << std::endl;
+      return;
     } else {
       throw std::invalid_argument("invalid item of module \"" + args[0] + "\"");
     }
