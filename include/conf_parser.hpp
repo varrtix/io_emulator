@@ -18,6 +18,8 @@
 
 #include <ctf_util.h>
 
+#include "db.hpp"
+
 namespace conf {
 class basic_parser {
 public:
@@ -117,6 +119,9 @@ class io_parser final : public basic_parser {
 
   static constexpr auto ioconf_path_k = "IOXML_CONF_PATH";
   static constexpr auto ioconf_path_suffix = "workspace/conf/conf-io.xml";
+
+  static constexpr auto db_path_k = "IODATA_PATH";
+  static constexpr auto db_filename = "iodata";
 
 public:
   struct driver;
@@ -234,24 +239,8 @@ public:
     }
   };
 
-  explicit io_parser(const std::string env_key = ioconf_path_k)
-      : basic_parser() {
-    const auto value = std::getenv(env_key.c_str());
-    auto filepath = std::filesystem::path();
-    if (value != nullptr) {
-      filepath = value;
-    } else if (auto root = ctf::get_current_eq_proj(); !root.empty()) {
-      filepath = std::move(root);
-      filepath /= ioconf_path_suffix;
-    } else {
-      std::cerr << "Warning: no config file could be load, please use "
-                   "command 'load' to read first"
-                << std::endl;
-      return;
-    }
-
-    reload(filepath);
-  }
+  explicit io_parser(const std::string env_key = ioconf_path_k,
+                     bool enable_persist = true);
 
   static io_parser::ptr make_unique() { return std::make_unique<io_parser>(); }
 
@@ -281,6 +270,10 @@ private:
   items_type items_;
   item_keys_type item_keys_;
 
+  bool enable_persist_;
+  std::filesystem::path dbpath_;
+  db::wrapper::ptr db_;
+
   static std::string node_get_attr(const node_type *node,
                                    const std::string &name) {
     if (auto attr = node->first_attribute(name.c_str());
@@ -288,7 +281,29 @@ private:
       return attr->value();
     return "";
   }
+
+  bool reload_db();
 };
+
+inline io_parser::io_parser(const std::string env_key, bool enable_persist)
+    : basic_parser(), enable_persist_(enable_persist) {
+  const auto value = std::getenv(env_key.c_str());
+  auto filepath = std::filesystem::path();
+  if (value != nullptr) {
+    filepath = value;
+  } else if (auto root = ctf::get_current_eq_proj(); !root.empty()) {
+    filepath = std::move(root);
+    filepath /= ioconf_path_suffix;
+  } else {
+    std::cerr << "Warning: no config file could be load, please use "
+                 "command 'load' to read first"
+              << std::endl;
+    return;
+  }
+
+  reload(filepath);
+  reload_db();
+}
 
 inline void io_parser::reload(const std::filesystem::path &filepath) {
   basic_parser::reload(filepath);
@@ -326,5 +341,25 @@ inline void io_parser::reload(const std::filesystem::path &filepath) {
   drivers_ = std::move(drivers);
   items_ = std::move(items);
   item_keys_ = std::move(item_keys);
+}
+
+inline bool io_parser::reload_db() {
+  if (enable_persist_) {
+    const auto value = std::getenv(db_path_k);
+    auto dbpath = std::filesystem::path();
+    if (value != nullptr)
+      dbpath = value;
+    else
+      dbpath =
+          (filepath_.has_parent_path() ? filepath_.parent_path() : filepath_) /
+          db_filename;
+
+    db_ = std::make_unique<db::wrapper>(dbpath);
+    if (db_) {
+      dbpath_ = std::move(dbpath);
+      return true;
+    }
+  }
+  return false;
 }
 } // namespace conf
