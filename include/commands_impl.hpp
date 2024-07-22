@@ -103,12 +103,12 @@ inline void variant::set_value_from_str(item::data_type type,
 inline bool variant::read() noexcept {
   try {
     auto ret = IO_UNKNOWN_TYPE;
-    if (auto ptr = std::get_if<int>(&var_))
-      ret = io_read_int(param_.c_str(), ptr);
-    else if (auto ptr = std::get_if<double>(&var_))
-      ret = io_read_double(param_.c_str(), ptr);
-    else if (auto ptr = std::get_if<std::string>(&var_))
-      ret = io_read_string(param_, *ptr);
+    if (auto int_ptr = std::get_if<int>(&var_))
+      ret = io_read_int(param_.c_str(), int_ptr);
+    else if (auto double_ptr = std::get_if<double>(&var_))
+      ret = io_read_double(param_.c_str(), double_ptr);
+    else if (auto str_ptr = std::get_if<std::string>(&var_))
+      ret = io_read_string(param_, *str_ptr);
     return ret == IO_SUCCESS;
   } catch (const std::exception &e) {
     std::cerr << "Error: " << e.what() << std::endl;
@@ -119,12 +119,12 @@ inline bool variant::read() noexcept {
 inline bool variant::write() noexcept {
   try {
     auto ret = IO_UNKNOWN_TYPE;
-    if (auto ptr = std::get_if<int>(&var_))
-      ret = io_write_int(param_.c_str(), *ptr);
-    else if (auto ptr = std::get_if<double>(&var_))
-      ret = io_write_double(param_.c_str(), *ptr);
-    else if (auto ptr = std::get_if<std::string>(&var_))
-      ret = io_write_string(param_.c_str(), ptr->c_str());
+    if (auto int_ptr = std::get_if<int>(&var_))
+      ret = io_write_int(param_.c_str(), *int_ptr);
+    else if (auto double_ptr = std::get_if<double>(&var_))
+      ret = io_write_double(param_.c_str(), *double_ptr);
+    else if (auto str_ptr = std::get_if<std::string>(&var_))
+      ret = io_write_string(param_.c_str(), str_ptr->c_str());
     return ret == IO_SUCCESS;
   } catch (const std::exception &e) {
     std::cerr << "Error: " << e.what() << std::endl;

@@ -18,7 +18,7 @@ if(ENABLE_CTF_CLI)
     message(STATUS "Enabling definition flag: CTF_CLI")
 endif()
 
-set(CTF_LIBRARIES 
+set(CTF_LIBRARIES
     iosvc
     ctf_util
     ctf_log
@@ -47,7 +47,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows" OR CMAKE_SYSTEM_NAME STREQUAL "MSYS"
     add_compile_definitions(WIN32 _CRT_SECURE_NO_WARNINGS)
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-        add_compile_options(/W4)
+        add_compile_options(/W4 /wd4996)
         set(tmp_list ${CTF_LIBRARIES})
         set(CTF_LIBRARIES)
         foreach(ctf_libname IN LISTS tmp_list)

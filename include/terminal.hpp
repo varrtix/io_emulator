@@ -64,7 +64,7 @@ private:
 };
 
 inline char **terminal::command_completion(const char *text, int start,
-                                           int end) {
+                                           int end [[maybe_unused]]) {
   char **matches = nullptr;
 
   rl_attempted_completion_over = 1;
