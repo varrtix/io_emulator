@@ -16,11 +16,11 @@ if exist "build" (
     rd /s /q "build"
 )
 
-REM Create and enter the build directory
-echo Creating build directory ...
-mkdir "build"
-cd "build"
-echo Build directory: %CD%
+@REM REM Create and enter the build directory
+@REM echo Creating build directory ...
+@REM mkdir "build"
+@REM cd "build"
+@REM echo Build directory: %CD%
 
 REM Check if cmake is set in the environment variables
 where cmake >nul 2>nul
@@ -41,9 +41,11 @@ if not defined READLINE_PATH (
 )
 
 REM Run cmake with all script arguments and build using Ninja
-echo Running cmake...
-"!CMAKE_EXE!" -G Ninja -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE=RelWithDebInfo -DREADLINE_PATH=!READLINE_PATH! .. %*
-echo Building...
-"!CMAKE_EXE!" --build . --parallel 32
+echo Running cmake ...
+"!CMAKE_EXE!" -G Ninja -S . -B build -DCMAKE_CXX_COMPILER=cl -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="%ROOT_DIR%\dist" -DREADLINE_PATH=!READLINE_PATH! %*
+echo Building ...
+"!CMAKE_EXE!" --build build --parallel 32
+echo Installing ...
+"!CMAKE_EXE!" --install build
 
 endlocal
