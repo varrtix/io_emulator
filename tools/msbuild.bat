@@ -16,12 +16,6 @@ if exist "build" (
     rd /s /q "build"
 )
 
-@REM REM Create and enter the build directory
-@REM echo Creating build directory ...
-@REM mkdir "build"
-@REM cd "build"
-@REM echo Build directory: %CD%
-
 REM Check if cmake is set in the environment variables
 where cmake >nul 2>nul
 if %errorlevel% neq 0 (
