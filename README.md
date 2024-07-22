@@ -8,7 +8,7 @@ quick build & install by msvc:
 
 2. Run as below:
 
-```shell
+```
 $> tools\msbuild.bat -DCTF_RPATH="C:\xxx\ctf"
 ```
-3. lookup the distribution of package on 'dist' folder of rootpath.
+3. Lookup the distribution of package on 'dist' folder of rootpath.
