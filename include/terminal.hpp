@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -31,9 +32,12 @@ public:
   void register_commands(commands::vec_type &&cmds);
 
   void run(const std::string &name);
+  void stop() noexcept { running_.store(false, std::memory_order_release); }
 
 private:
-  terminal() { rl_attempted_completion_function = command_completion; }
+  terminal() : running_(false) {
+    rl_attempted_completion_function = command_completion;
+  }
 
   static char **command_completion(const char *text, int start, int end);
 
@@ -56,6 +60,7 @@ private:
   commands cmds_;
   basic_completion::ptr cmd_completion_;
   basic_completion::generator_func generator_;
+  std::atomic_bool running_;
 };
 
 inline char **terminal::command_completion(const char *text, int start,
@@ -91,9 +96,16 @@ inline void terminal::register_commands(commands::vec_type &&cmds) {
 }
 
 inline void terminal::run(const std::string &name) {
+  if (running_.load(std::memory_order_acquire)) {
+    std::cerr << "Warning: terminal is already running ..." << std::endl;
+    return;
+  } else {
+    running_.store(true, std::memory_order_release);
+  }
+
   std::unique_ptr<char, decltype(&std::free)> input(nullptr, std::free);
   set_prompt(name);
-  while (true) {
+  while (running_.load(std::memory_order_acquire)) {
     try {
       input.reset(readline(prompt().c_str()));
       if (input == nullptr || std::strlen(input.get()) == 0)

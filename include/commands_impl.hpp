@@ -13,6 +13,7 @@
 
 #include "command.hpp"
 #include "conf_parser.hpp"
+#include "terminal.hpp"
 
 namespace ctf_io {
 class variant final {
@@ -244,7 +245,7 @@ inline basic_command::ptr make_help_command() {
 
 inline basic_command::ptr make_exit_command() {
   return std::make_unique<basic_command>("exit", [](const auto &) {
-    std::exit(EXIT_SUCCESS);
+    terminal::shared().stop();
     return true;
   });
 }
