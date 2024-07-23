@@ -99,3 +99,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+option(WITH_DRVS "Build with drivers" ON)
+if(WITH_DRVS)
+    message(STATUS "Building with emulated drivers")
+    add_subdirectory(external/drv_emu)
+endif()
