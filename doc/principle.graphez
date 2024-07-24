@@ -1,0 +1,11 @@
+graph { flow: right; }
+ 
+(CTF [IO||LOG||...] { basename: CTF; })
+
+(Emulated Drivers [Driver A||Driver B||...] { basename: DRVS; }) 
+
+(IO Emulator [IO TEST] -> [Emulator Core])
+
+[CTF.0] -> { flow: left; } [DRVS.0]
+[IO TEST] -> { flow: down; } [CTF.0]
+[DRVS.0] -> { flow: up; } [Emulator Core]
