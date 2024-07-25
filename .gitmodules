@@ -1,4 +1,3 @@
 [submodule "external/emu_core"]
 	path = external/emu_core
-	url = https://gitee.com/vmoca/emulator_core.git
-	branch = v2.0
+	url = https://gitee.com/vmoca/emulator_core
