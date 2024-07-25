@@ -1,3 +1,4 @@
-[submodule "external/drv_emu"]
-	path = external/drv_emu
-	url = https://gitee.com/vmoca/driver_emulator
+[submodule "external/emu_core"]
+	path = external/emu_core
+	url = https://gitee.com/vmoca/emulator_core.git
+	branch = v2.0
