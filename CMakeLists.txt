@@ -19,9 +19,14 @@ if(ENABLE_CTF_CLI)
 endif()
 
 set(CTF_LIBRARIES
+    oslib
+    muparser
+    sqlite3
+    lrpc
     iosvc
     ctf_util
     ctf_log
+    ctf_history
 )
 
 # Set the policy CMP0135 to NEW
@@ -62,23 +67,24 @@ endif()
 
 if (DEFINED READLINE_PATH)
     find_path(READLINE_INCLUDE_DIRS readline/readline.h PATHS ${READLINE_PATH}/include)
-    find_library(READLINE_LIBRARIES NAMES readline PATHS ${READLINE_PATH}/lib)
-    if (NOT READLINE_INCLUDE_DIRS OR NOT READLINE_LIBRARIES)
-        message(FATAL_ERROR "Readline library not found.")
-    else()
-        message(STATUS "Found readline include: ${READLINE_INCLUDE_DIRS}")
-        message(STATUS "Found readline library: ${READLINE_LIBRARIES}")
+    find_library(READLINE_LIBRARY_DIRS NAMES readline PATHS ${READLINE_PATH}/lib)
+    if (READLINE_INCLUDE_DIRS AND READLINE_LIBRARY_DIRS)
+        set(READLINE_FOUND TRUE)
     endif()
 else()
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         find_package(PkgConfig REQUIRED)
-        pkg_check_modules(READLINE REQUIRED readline)
-        if(NOT READLINE_FOUND)
-            message(FATAL_ERROR "Readline library not found.")
-        endif()
+        pkg_check_modules(READLINE REQUIRED readline ncursesw)
     elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         message(FATAL_ERROR "'READLINE_PATH' not set.")
     endif()
+endif()
+
+if (READLINE_FOUND)
+    message(STATUS "Found readline include: ${READLINE_INCLUDE_DIRS}")
+    message(STATUS "Found readline library: ${READLINE_LIBRARY_DIRS}")
+else ()
+    message(FATAL_ERROR "Readline library not found.")
 endif()
 
 file(GLOB SRC_FILES ${CMAKE_SOURCE_DIR}/src/*.cc)
@@ -92,7 +98,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${DRV_DEPS_INCLUDE}
     ${READLINE_INCLUDE_DIRS}
 )
-target_link_directories(${PROJECT_NAME} PRIVATE ${CTF_LIBDIR})
+target_link_directories(${PROJECT_NAME} PRIVATE 
+    ${CTF_LIBDIR} 
+    ${READLINE_LIBRARY_DIRS}
+)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     ${CTF_LIBRARIES}
     ${READLINE_LIBRARIES}
